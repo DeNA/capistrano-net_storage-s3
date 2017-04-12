@@ -1,8 +1,9 @@
 # Capistrano::NetStorage::S3
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/capistrano/net_storage/s3`. To experiment with that code, run `bin/console` for an interactive prompt.
-
-TODO: Delete this and the text above, and describe your gem
+**Capistrano::NetStorage::S3** is a transport plugin of
+[Capistrano::NetStorage](https://github.com/DeNADev/capistrano-net_storage) to deploy application
+via [Amazon S3](https://aws.amazon.com/s3/).  
+And Capistrano::NetStorage is a plugin of [Capistrano](http://capistranorb.com/).
 
 ## Installation
 
@@ -20,19 +21,61 @@ Or install it yourself as:
 
     $ gem install capistrano-net_storage-s3
 
+## Configuration
+
+Set Capistrano variables by `set name, value`.
+
+ Name | Default | Description
+------|---------|------------
+ `:scm`  | `nil` | Set `:net_storage`
+ `:net_storage_transport` | `nil` | Set `Capistrano::NetStorage::S3::Transport`
+ `:net_storage_s3_broker` | `:aws_cli` | Type of transportation broker
+ `:net_storage_s3_aws_access_key_id` | `ENV['AWS_ACCESS_KEY_ID']` | AWS Access Key ID
+ `:net_storage_s3_aws_secret_access_key` | `ENV['AWS_SECRET_ACCESS_KEY']` | AWS Secret Access Key
+ `:net_storage_s3_aws_session_token` | `ENV['AWS_SESSION_TOKEN']` | AWS Session Token
+ `:net_storage_s3_aws_region` | `ENV['AWS_DEFAULT_REGION']` | AWS Region
+ `:net_storage_s3_aws_profile` | `ENV['AWS_DEFAULT_PROFILE']` | AWS Profile
+ `:net_storage_s3_aws_config_file` | `ENV['AWS_CONFIG_FILE']` | AWS Config File
+ `:net_storage_s3_bucket` | `nil` | S3 bucket name
+ `:net_storage_s3_archives_directory` | `nil` | Directory for application archives in S3 bucket
+ `:net_storage_s3_max_retry` | `3` | Max retry times for S3 operations
+
+See also
+[the configuration section of Capistrano::NetStorage](https://github.com/DeNADev/capistrano-net_storage#configuration).
+
 ## Usage
 
-TODO: Write usage instructions here
+Edit Capfile:
 
-## Development
+```ruby
+# Load DSL and Setup Up Stages
+require 'capistrano/setup'
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+# Includes default deployment tasks
+require 'capistrano/deploy'
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and tags, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+# Includes tasks from other gems included in your Gemfile
+require 'capistrano/net_storage'
+# Load transport plugin for Capistrano::NetStorage
+require 'capistrano/net_storage/s3'
+```
 
-## Contributing
+Edit your `config/deploy.rb`:
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/capistrano-net_storage-s3.
+```ruby
+set :scm, :net_storage
+set :net_storage_transport, Capistrano::NetStorage::S3::Transport
+# set :net_storage_config_files, [your_config_files]
+# set :net_storage_with_bundle, true
+# set :net_storage_archiver, Capistrano::NetStorage::Archiver::TarGzip
+set :net_storage_s3_bucket, 'example-bucket'
+# set :net_storage_s3_archives_directory, your_favorite_directory_path
+```
+
+## Example
+
+You can see typical usage of this library by
+[capistrano-net_storage_demo](https://github.com/DeNADev/capistrano-net_storage_demo/tree/net_storage-s3).
 
 ## License
 
