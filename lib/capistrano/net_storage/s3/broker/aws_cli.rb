@@ -12,7 +12,7 @@ class Capistrano::NetStorage::S3::Broker::AwsCLI < Capistrano::NetStorage::S3::B
     if capture_aws_s3('ls', config.archive_url)
       set :net_storage_uploaded_archive, true
     end
-  rescue SSHKit::Runner::ExecuteError
+  rescue SSHKit::StandardError
     c = config
     run_locally do
       info "Archive is not found on #{c.archive_url}"
