@@ -15,7 +15,7 @@ class Capistrano::NetStorage::S3::Broker::AwsCLI < Capistrano::NetStorage::S3::B
   rescue SSHKit::StandardError
     c = config
     run_locally do
-      info "Archive is not found on #{c.archive_url}"
+      info "Archive is not found as #{c.archive_url}"
     end
   end
 
