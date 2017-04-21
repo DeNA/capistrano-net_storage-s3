@@ -14,7 +14,7 @@ class Capistrano::NetStorage::S3::Broker::AwsCLI < Capistrano::NetStorage::S3::B
     end
   rescue SSHKit::Runner::ExecuteError
     c = config
-    on :local do
+    run_locally do
       info "Archive is not found on #{c.archive_url}"
     end
   end
@@ -45,7 +45,7 @@ class Capistrano::NetStorage::S3::Broker::AwsCLI < Capistrano::NetStorage::S3::B
 
   def execute_aws_s3(cmd, *args)
     c = config
-    on :local do
+    run_locally do
       with(c.aws_environments) do
         execute :aws, 's3', cmd, *args
       end
@@ -54,7 +54,7 @@ class Capistrano::NetStorage::S3::Broker::AwsCLI < Capistrano::NetStorage::S3::B
 
   def capture_aws_s3(cmd, *args)
     c = config
-    on :local do
+    run_locally do
       with(c.aws_environments) do
         capture :aws, 's3', cmd, *args
       end
