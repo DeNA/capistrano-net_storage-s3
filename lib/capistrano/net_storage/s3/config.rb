@@ -66,14 +66,30 @@ class Capistrano::NetStorage::S3
       end
     end
 
-    # S3 bucket URL via which one transports application archives
-    # @return [URI::Generic]
-    def bucket_url
+    # S3 bucket name via which one transports application archives
+    # @return [String]
+    def bucket
       @bucket ||= begin
         unless bucket = fetch(:net_storage_s3_bucket)
           raise Capistrano::NetStorage::S3::Error, ':net_storage_s3_bucket is not configured!'
         end
-        URI.parse("s3://#{bucket}")
+        bucket
+      end
+    end
+
+    # S3 bucket URL via which one transports application archives
+    # @return [URI::Generic]
+    def bucket_url
+      @bucket_url ||= URI.parse("s3://#{bucket}")
+    end
+
+    # Directory path on S3 bucket for application archives
+    # @return [String]
+    def archives_directory
+      # append '/' in case missing
+      @archives_directory ||= begin
+        dir = fetch(:net_storage_s3_archives_directory)
+        dir.sub(%r{[^/]\Z}, '\&/') if dir
       end
     end
 
@@ -105,17 +121,6 @@ class Capistrano::NetStorage::S3
     # @return [Fixnum]
     def max_retry
       @max_retry ||= fetch(:net_storage_s3_max_retry, 3)
-    end
-
-    private
-
-    # @return [String]
-    def archives_directory
-      # append '/' in case missing
-      @archives_directory ||= begin
-        dir = fetch(:net_storage_s3_archives_directory)
-        dir.sub(%r{[^/]\Z}, '\&/') if dir
-      end
     end
   end
 end
