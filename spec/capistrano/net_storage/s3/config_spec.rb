@@ -16,6 +16,7 @@ describe Capistrano::NetStorage::S3::Config do
   describe 'Configuration params' do
     it 'Default parameters' do
       expect(config.broker).to be_an_instance_of Capistrano::NetStorage::S3::Broker::AwsCLI
+      expect { config.bucket }.to raise_error(Capistrano::NetStorage::S3::Error)
       expect { config.bucket_url }.to raise_error(Capistrano::NetStorage::S3::Error)
       expect(config.max_retry).to eq 3
 
@@ -44,7 +45,9 @@ describe Capistrano::NetStorage::S3::Config do
         current_revision: 'test-revision',
       }.each { |k, v| env.set k, v }
 
+      expect(config.bucket).to eq 'test-bucket'
       expect(config.bucket_url.to_s).to eq 's3://test-bucket'
+      expect(config.archives_directory).to eq 'archives/'
       expect(config.archives_url.to_s).to eq 's3://test-bucket/archives/'
       expect(config.archive_url.to_s).to eq "s3://test-bucket/archives/test-revision.#{net_storage.archive_suffix}"
       expect(config.max_retry).to eq 5
