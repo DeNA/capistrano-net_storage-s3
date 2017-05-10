@@ -1,3 +1,10 @@
+## 0.2.3 (2017/5/10)
+
+Enhancement:
+
+- Add a config `:net_storage_s3_keep_release` as number to keep archives on S3
+(#4)
+
 ## 0.2.2 (2017/5/9)
 
 Feature:
