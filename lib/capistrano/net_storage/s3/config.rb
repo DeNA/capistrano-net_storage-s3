@@ -122,5 +122,11 @@ class Capistrano::NetStorage::S3
     def max_retry
       @max_retry ||= fetch(:net_storage_s3_max_retry, 3)
     end
+
+    # Number to keep archives on S3
+    # @return [Fixnum]
+    def s3_keep_releases
+      @s3_keep_releases ||= fetch(:net_storage_s3_keep_releases, fetch(:keep_releases, 5))
+    end
   end
 end
