@@ -40,6 +40,7 @@ Set Capistrano variables by `set name, value`.
  `:net_storage_s3_aws_config_file` | `ENV['AWS_CONFIG_FILE']` | AWS Config File
  `:net_storage_s3_bucket` | `nil` | S3 bucket name
  `:net_storage_s3_archives_directory` | `nil` | Directory for application archives in S3 bucket
+ `:net_storage_s3_keep_releases` | `:keep_releases` | Number to keep archives in S3
  `:net_storage_s3_max_retry` | `3` | Max retry times for S3 operations
 
 See also

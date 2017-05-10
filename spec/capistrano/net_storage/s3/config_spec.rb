@@ -19,6 +19,7 @@ describe Capistrano::NetStorage::S3::Config do
       expect { config.bucket }.to raise_error(Capistrano::NetStorage::S3::Error)
       expect { config.bucket_url }.to raise_error(Capistrano::NetStorage::S3::Error)
       expect(config.max_retry).to eq 3
+      expect(config.s3_keep_releases).to eq 5
 
       # AWS config variables
       expect(config.aws_access_key_id).to eq ENV['AWS_ACCESS_KEY_ID']
@@ -42,6 +43,7 @@ describe Capistrano::NetStorage::S3::Config do
         net_storage_s3_bucket: 'test-bucket',
         net_storage_s3_archives_directory: 'archives',
         net_storage_s3_max_retry: 5,
+        net_storage_s3_keep_releases: 3,
         current_revision: 'test-revision',
       }.each { |k, v| env.set k, v }
 
@@ -51,6 +53,7 @@ describe Capistrano::NetStorage::S3::Config do
       expect(config.archives_url.to_s).to eq 's3://test-bucket/archives/'
       expect(config.archive_url.to_s).to eq "s3://test-bucket/archives/test-revision.#{net_storage.archive_suffix}"
       expect(config.max_retry).to eq 5
+      expect(config.s3_keep_releases).to eq 3
 
       # AWS config variables
       expect(config.aws_access_key_id).to eq 'AKI_TEST'

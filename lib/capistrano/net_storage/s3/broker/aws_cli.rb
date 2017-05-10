@@ -54,7 +54,7 @@ class Capistrano::NetStorage::S3::Broker::AwsCLI < Capistrano::NetStorage::S3::B
 
     objects = JSON.parse(output)['Contents']
     sorted  = objects.sort_by { |obj| Time.parse(obj['LastModified']) }
-    fetch(:keep_releases).times do
+    c.s3_keep_releases.times do
       break if sorted.empty?
       sorted.pop
     end
