@@ -29,7 +29,7 @@ Set Capistrano variables by `set name, value`.
 
  Name | Default | Description
 ------|---------|------------
- `:scm`  | `nil` | Set `:net_storage`
+ `:scm`  | `nil` | Set `:net_storage` for capistrano before v3.7
  `:net_storage_transport` | `nil` | Set `Capistrano::NetStorage::S3::Transport`
  `:net_storage_s3_broker` | `:aws_cli` | Type of transportation broker
  `:net_storage_s3_aws_access_key_id` | `ENV['AWS_ACCESS_KEY_ID']` | AWS Access Key ID
@@ -58,7 +58,13 @@ require 'capistrano/setup'
 require 'capistrano/deploy'
 
 # Includes tasks from other gems included in your Gemfile
-require 'capistrano/net_storage'
+if Gem::Version.new(Capistrano::VERSION) < Gem::Version.new('3.7.0')
+  require 'capistrano/net_storage'
+else
+  require "capistrano/net_storage/plugin"
+  install_plugin Capistrano::NetStorage::Plugin
+end
+
 # Load transport plugin for Capistrano::NetStorage
 require 'capistrano/net_storage/s3'
 ```
@@ -66,7 +72,9 @@ require 'capistrano/net_storage/s3'
 Edit your `config/deploy.rb`:
 
 ```ruby
-set :scm, :net_storage
+if Gem::Version.new(Capistrano::VERSION) < Gem::Version.new('3.7.0')
+  set :scm, :net_storage
+end
 set :net_storage_transport, Capistrano::NetStorage::S3::Transport
 # set :net_storage_config_files, [your_config_files]
 # set :net_storage_with_bundle, true
