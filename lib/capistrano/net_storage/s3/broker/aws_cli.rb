@@ -25,7 +25,7 @@ class Capistrano::NetStorage::S3::Broker::AwsCLI < Capistrano::NetStorage::S3::B
     c  = config
     ns = net_storage
     Retryable.retryable(tries: c.max_retry, sleep: 0.1) do
-      execute_aws_s3('cp', ns.local_archive_path, c.archive_url)
+      execute_aws_s3('cp', '--no-progress', ns.local_archive_path, c.archive_url)
     end
   end
 
@@ -36,7 +36,7 @@ class Capistrano::NetStorage::S3::Broker::AwsCLI < Capistrano::NetStorage::S3::B
       Retryable.retryable(tries: c.max_retry, sleep: 0.1) do
         within releases_path do
           with(c.aws_environments) do
-            execute :aws, 's3', 'cp', c.archive_url, ns.archive_path
+            execute :aws, 's3', 'cp', '--no-progress', c.archive_url, ns.archive_path
           end
         end
       end
