@@ -6,6 +6,10 @@ require 'capistrano/net_storage/s3/base'
 require 'capistrano/net_storage/s3/broker/base'
 
 class Capistrano::NetStorage::S3::Broker::AwsCLI < Capistrano::NetStorage::S3::Broker::Base
+  # These values are intentionally separated from config and fixed.
+  # If you have trouble with these defaults for 10^2 ~ 10^3 servers, please contact us on GitHub.
+  JITTER_DURATION_TO_DOWNLOAD = 4.0
+
   def check
     execute_aws_s3('ls', config.bucket_url)
   end
@@ -35,6 +39,7 @@ class Capistrano::NetStorage::S3::Broker::AwsCLI < Capistrano::NetStorage::S3::B
       Retryable.retryable(tries: c.max_retry, sleep: 0.1) do
         within releases_path do
           with(c.aws_environments) do
+            sleep Random.rand(JITTER_DURATION_TO_DOWNLOAD)
             execute :aws, 's3', 'cp', '--no-progress', c.archive_url, ns.archive_path
           end
         end
