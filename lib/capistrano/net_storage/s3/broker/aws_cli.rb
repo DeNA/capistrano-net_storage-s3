@@ -31,7 +31,7 @@ class Capistrano::NetStorage::S3::Broker::AwsCLI < Capistrano::NetStorage::S3::B
   def download
     c  = config
     ns = net_storage
-    on ns.servers, in: :groups, limit: ns.max_parallels do
+    on release_roles :all, in: :groups, limit: ns.max_parallels do
       Retryable.retryable(tries: c.max_retry, sleep: 0.1) do
         within releases_path do
           with(c.aws_environments) do
