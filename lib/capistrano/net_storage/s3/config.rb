@@ -110,9 +110,9 @@ class Capistrano::NetStorage::S3
     def archive_url
       @archive_url ||= begin
         unless revision = fetch(:current_revision)
-          raise Capistrano::NetStorage::Error, ':current_revision is not set!'
+          raise ArgumentError, ':current_revision is not set!'
         end
-        archive_file = "#{revision}.#{Capistrano::NetStorage.config.archive_suffix}"
+        archive_file = "#{revision}.#{Capistrano::NetStorage.config.archive_file_extension}"
         archives_url + archive_file
       end
     end
