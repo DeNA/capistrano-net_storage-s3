@@ -12,7 +12,7 @@ And Capistrano::NetStorage is a plugin of [Capistrano](http://capistranorb.com/)
 Add this line to your application's Gemfile:
 
 ```ruby
-gem 'capistrano-net_storage-s3'
+gem 'capistrano-net_storage-s3', require: false
 ```
 
 And then execute:
