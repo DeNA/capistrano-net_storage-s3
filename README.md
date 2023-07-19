@@ -29,8 +29,8 @@ Set Capistrano variables by `set name, value`.
 
  Name | Default | Description
 ------|---------|------------
- `:scm`  | `nil` | Set `:net_storage` for capistrano before v3.7
- `:net_storage_transport` | `nil` | Set `Capistrano::NetStorage::S3::Transport`
+ `:net_storage_transport` | NO DEFAULT | Set `Capistrano::NetStorage::S3::Transport`
+ `:net_storage_s3_bucket` | NO DEFAULT | S3 bucket name
  `:net_storage_s3_broker` | `:aws_cli` | Type of transportation broker
  `:net_storage_s3_aws_access_key_id` | `ENV['AWS_ACCESS_KEY_ID']` | AWS Access Key ID
  `:net_storage_s3_aws_secret_access_key` | `ENV['AWS_SECRET_ACCESS_KEY']` | AWS Secret Access Key
@@ -38,7 +38,6 @@ Set Capistrano variables by `set name, value`.
  `:net_storage_s3_aws_region` | `ENV['AWS_DEFAULT_REGION']` | AWS Region
  `:net_storage_s3_aws_profile` | `ENV['AWS_DEFAULT_PROFILE']` | AWS Profile
  `:net_storage_s3_aws_config_file` | `ENV['AWS_CONFIG_FILE']` | AWS Config File
- `:net_storage_s3_bucket` | `nil` | S3 bucket name
  `:net_storage_s3_archives_directory` | `nil` | Directory for application archives in S3 bucket
  `:net_storage_s3_keep_releases` | `:keep_releases` | Number to keep archives in S3
  `:net_storage_s3_max_retry` | `3` | Max retry times for S3 operations
@@ -58,12 +57,8 @@ require 'capistrano/setup'
 require 'capistrano/deploy'
 
 # Includes tasks from other gems included in your Gemfile
-if Gem::Version.new(Capistrano::VERSION) < Gem::Version.new('3.7.0')
-  require 'capistrano/net_storage'
-else
-  require "capistrano/net_storage/plugin"
-  install_plugin Capistrano::NetStorage::Plugin
-end
+require "capistrano/net_storage/plugin"
+install_plugin Capistrano::NetStorage::Plugin
 
 # Load transport plugin for Capistrano::NetStorage
 require 'capistrano/net_storage/s3'
@@ -72,15 +67,9 @@ require 'capistrano/net_storage/s3'
 Edit your `config/deploy.rb`:
 
 ```ruby
-if Gem::Version.new(Capistrano::VERSION) < Gem::Version.new('3.7.0')
-  set :scm, :net_storage
-end
 set :net_storage_transport, Capistrano::NetStorage::S3::Transport
-# set :net_storage_config_files, [your_config_files]
-# set :net_storage_with_bundle, true
-# set :net_storage_archiver, Capistrano::NetStorage::Archiver::TarGzip
+set :net_storage_config_files, Pathname('path/to/config').glob('*.yml')
 set :net_storage_s3_bucket, 'example-bucket'
-# set :net_storage_s3_archives_directory, your_favorite_directory_path
 ```
 
 ## Example
