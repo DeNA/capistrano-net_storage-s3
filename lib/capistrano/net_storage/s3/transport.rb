@@ -7,7 +7,7 @@ require 'capistrano/net_storage/s3/config'
 
 class Capistrano::NetStorage::S3::Transport < Capistrano::NetStorage::Transport::Base
   extend Forwardable
-  def_delegators :broker, :check, :find_uploaded, :upload, :download, :cleanup
+  def_delegators :broker, :check, :archive_exists?, :upload, :download, :cleanup
 
   private
 
