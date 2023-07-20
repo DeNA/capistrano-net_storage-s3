@@ -11,17 +11,21 @@ class Capistrano::NetStorage::S3::Broker::AwsCLI < Capistrano::NetStorage::S3::B
   JITTER_DURATION_TO_DOWNLOAD = 4.0
 
   def check
-    execute_aws_s3('ls', config.bucket_url)
+    c = config
+    run_locally do
+      with(c.aws_environments) do
+        test :aws, 's3api', 'head-bucket', '--bucket', c.bucket
+      end
+    end
   end
 
   def archive_exists?
-    capture_aws_s3('ls', config.archive_url) # exit code 1 for not found
-
-    true
-  rescue SSHKit::StandardError
-    info "Archive is not found at #{config.archive_url}"
-
-    false
+    c = config
+    run_locally do
+      with(c.aws_environments) do
+        test :aws, 's3', 'ls', c.archive_url
+      end
+    end
   end
 
   def upload
