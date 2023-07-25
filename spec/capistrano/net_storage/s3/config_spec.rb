@@ -1,75 +1,119 @@
 require 'spec_helper'
 
+require 'capistrano/net_storage/s3/config'
+
 describe Capistrano::NetStorage::S3::Config do
   let(:config) { Capistrano::NetStorage::S3::Config.new }
-  let(:net_storage) { Capistrano::NetStorage.config }
+  let(:ns_config) { Capistrano::NetStorage.config }
+  let(:env) { Capistrano::Configuration.env } # Capistrano::NetStorage::Config fetches from global env
 
-  before :context do
-    env = Capistrano::Configuration.env
-    env.set :net_storage_transport, Capistrano::NetStorage::S3::Transport
+  def clear_aws_env!
+    %w[
+      AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY
+      AWS_SESSION_TOKEN
+      AWS_DEFAULT_REGION
+      AWS_DEFAULT_PROFILE
+      AWS_CONFIG_FILE
+    ].each do |name|
+      ENV.delete(name)
+    end
   end
 
-  after :context do
+  before do
+    clear_aws_env!
     Capistrano::Configuration.reset!
+
+    env.instance_eval(&capfile)
+    invoke! 'load:defaults'
   end
 
-  describe 'Configuration params' do
-    it 'Default parameters' do
-      expect(config.broker).to be_an_instance_of Capistrano::NetStorage::S3::Broker::AwsCLI
-      expect { config.bucket }.to raise_error(Capistrano::NetStorage::S3::Error)
-      expect { config.bucket_url }.to raise_error(Capistrano::NetStorage::S3::Error)
-      expect(config.max_retry).to eq 3
-      expect(config.s3_keep_releases).to eq 5
+  describe 'configuration' do
+    context 'with default settings' do
+      let(:capfile) do
+        -> (_env) {
+          set :application, 'api'
+          set :deploy_to, '/path/to/deploy'
+          role :web, %w(web1 web2)
+          role :db,  %w(db1)
 
-      # AWS config variables
-      expect(config.aws_access_key_id).to eq ENV['AWS_ACCESS_KEY_ID']
-      expect(config.aws_secret_access_key).to eq ENV['AWS_SECRET_ACCESS_KEY']
-      expect(config.aws_session_token).to eq ENV['AWS_SESSION_TOKEN']
-      expect(config.aws_region).to eq ENV['AWS_DEFAULT_REGION']
-      expect(config.aws_profile).to eq ENV['AWS_DEFAULT_PROFILE']
-      expect(config.aws_config_file).to eq ENV['AWS_CONFIG_FILE']
-      expect(config.aws_environments).to be_an_instance_of Hash
+          require 'capistrano/net_storage/s3/transport'
+          set :net_storage_transport, Capistrano::NetStorage::S3::Transport
+        }
+      end
+
+      before do
+        ENV['AWS_ACCESS_KEY_ID'] = 'aki'
+        ENV['AWS_SECRET_ACCESS_KEY'] = 'sak'
+        ENV['AWS_SESSION_TOKEN'] = 'st'
+        ENV['AWS_DEFAULT_REGION'] = 'dr'
+        ENV['AWS_DEFAULT_PROFILE'] = 'dp'
+        ENV['AWS_CONFIG_FILE'] = 'cf'
+      end
+
+      it 'yields default parameters' do
+        expect(config.broker_class).to be Capistrano::NetStorage::S3::Broker::AwsCLI
+        expect { config.bucket }.to raise_error(ArgumentError)
+        expect(config.s3_keep_releases).to eq 5
+      end
+
+      it 'yields AWS variable from ENV' do
+        expect(config.aws_environments).to eq(
+          aws_access_key_id: 'aki',
+          aws_secret_access_key: 'sak',
+          aws_session_token: 'st',
+          aws_default_region: 'dr',
+          aws_default_profile: 'dp',
+          aws_config_file: 'cf'
+        )
+      end
     end
 
-    it 'Customized parameters' do
-      env = Capistrano::Configuration.env
-      {
-        net_storage_s3_aws_access_key_id: 'AKI_TEST',
-        net_storage_s3_aws_secret_access_key: 'test-secret',
-        net_storage_s3_aws_session_token: 'test-token',
-        net_storage_s3_aws_region: 'test-region',
-        net_storage_s3_aws_profile: 'test-profile',
-        net_storage_s3_aws_config_file: '/path/to/aws/config',
-        net_storage_s3_bucket: 'test-bucket',
-        net_storage_s3_archives_directory: 'archives',
-        net_storage_s3_max_retry: 5,
-        net_storage_s3_keep_releases: 3,
-        current_revision: 'test-revision',
-      }.each { |k, v| env.set k, v }
+    context 'with customized parameters' do
+      let(:capfile) do
+        -> (_env) {
+          set :application, 'api'
+          set :deploy_to, '/path/to/deploy'
+          role :web, %w(web1 web2)
+          role :db,  %w(db1)
 
-      expect(config.bucket).to eq 'test-bucket'
-      expect(config.bucket_url.to_s).to eq 's3://test-bucket'
-      expect(config.archives_directory).to eq 'archives/'
-      expect(config.archives_url.to_s).to eq 's3://test-bucket/archives/'
-      expect(config.archive_url.to_s).to eq "s3://test-bucket/archives/test-revision.#{net_storage.archive_suffix}"
-      expect(config.max_retry).to eq 5
-      expect(config.s3_keep_releases).to eq 3
+          set :net_storage_transport, Capistrano::NetStorage::S3::Transport
 
-      # AWS config variables
-      expect(config.aws_access_key_id).to eq 'AKI_TEST'
-      expect(config.aws_secret_access_key).to eq 'test-secret'
-      expect(config.aws_session_token).to eq 'test-token'
-      expect(config.aws_region).to eq 'test-region'
-      expect(config.aws_profile).to eq 'test-profile'
-      expect(config.aws_config_file).to eq '/path/to/aws/config'
-      expect(config.aws_environments).to eq(
-        aws_config_file: '/path/to/aws/config',
-        aws_default_profile: 'test-profile',
-        aws_default_region: 'test-region',
-        aws_access_key_id: 'AKI_TEST',
-        aws_secret_access_key: 'test-secret',
-        aws_session_token: 'test-token',
-      )
+          set :net_storage_s3_aws_access_key_id, 'aki-from-cap'
+          set :net_storage_s3_aws_secret_access_key, 'sak-from-cap'
+          set :net_storage_s3_aws_session_token, 'st-from-cap'
+          set :net_storage_s3_aws_region, 'dr-from-cap'
+          set :net_storage_s3_aws_profile, 'dp-from-cap'
+          set :net_storage_s3_aws_config_file, 'cf-from-cap'
+
+          set :net_storage_s3_bucket, 'test-bucket'
+          set :net_storage_s3_archives_directory, 'archives'
+
+        }
+      end
+
+      before do
+        # In real deployment flow, this is set by Capistrano::NetStorage
+        set :current_revision, 'test-revision'
+      end
+
+      it 'Customized parameters' do
+        expect(config.bucket).to eq 'test-bucket'
+        expect(config.archives_url.to_s).to eq 's3://test-bucket/archives/'
+        expect(config.archive_url.to_s).to eq "s3://test-bucket/archives/test-revision.#{ns_config.archive_suffix}"
+      end
+
+        # AWS config variables
+      it 'yields AWS parameters from config' do
+        expect(config.aws_environments).to eq(
+          aws_access_key_id: 'aki-from-cap',
+          aws_secret_access_key: 'sak-from-cap',
+          aws_session_token: 'st-from-cap',
+          aws_default_region: 'dr-from-cap',
+          aws_default_profile: 'dp-from-cap',
+          aws_config_file: 'cf-from-cap',
+        )
+      end
     end
   end
 end
