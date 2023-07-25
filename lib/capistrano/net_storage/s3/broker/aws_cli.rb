@@ -1,111 +1,98 @@
-require 'json'
-require 'time'
 require 'retryable'
 
-require 'capistrano/net_storage/s3/base'
-require 'capistrano/net_storage/s3/broker/base'
+require 'capistrano/net_storage/transport/base'
 
-class Capistrano::NetStorage::S3::Broker::AwsCLI < Capistrano::NetStorage::S3::Broker::Base
-  # These values are intentionally separated from config and fixed.
-  # If you have trouble with these defaults for 10^2 ~ 10^3 servers, please contact us on GitHub.
-  JITTER_DURATION_TO_DOWNLOAD = 4.0
+# NOTE: Broker is inherited from Transport
+module Capistrano
+  module NetStorage
+    class S3
+      module Broker
+        class AwsCLI < Capistrano::NetStorage::Transport::Base
+          # These values are intentionally separated from config and fixed.
+          # If you have trouble with these defaults for 10^2 ~ 10^3 servers, please contact us on GitHub.
+          JITTER_DURATION_TO_DOWNLOAD = 4.0
+          MAX_RETRY = 3 # TODO: We need to rewrite this for large-scale AWS S3 stability
+          KEEP_FILE = '.keep'
 
-  def check
-    c = config
-    run_locally do
-      with(c.aws_environments) do
-        test :aws, 's3api', 'head-bucket', '--bucket', c.bucket
-      end
-    end
-  end
+          def check
+            config = Capistrano::NetStorage::S3.config
 
-  def archive_exists?
-    c = config
-    run_locally do
-      with(c.aws_environments) do
-        test :aws, 's3', 'ls', c.archive_url
-      end
-    end
-  end
+            # We check both read and write permissions with aws s3 command
+            run_locally_with_aws_env do
+              unless test :aws, 's3', 'ls', config.archives_url
+                keep = Tempfile.create.path
+                execute :aws, 's3', 'cp', keep, config.archives_url + KEEP_FILE
+              end
+            end
+          end
 
-  def upload
-    c  = config
-    ns = net_storage
-    Retryable.retryable(tries: c.max_retry, sleep: 0.1) do
-      execute_aws_s3('cp', '--no-progress', ns.local_archive_path, c.archive_url)
-    end
-  end
+          def archive_exists?
+            config = Capistrano::NetStorage::S3.config
 
-  def download
-    c  = config
-    ns = net_storage
-    on release_roles :all, in: :groups, limit: ns.max_parallels do
-      Retryable.retryable(tries: c.max_retry, sleep: 0.1) do
-        within releases_path do
-          with(c.aws_environments) do
-            sleep Random.rand(JITTER_DURATION_TO_DOWNLOAD)
-            execute :aws, 's3', 'cp', '--no-progress', c.archive_url, ns.archive_path
+            run_locally_with_aws_env do
+              test :aws, 's3', 'ls', config.archive_url
+            end
+          end
+
+          def upload
+            config = Capistrano::NetStorage::S3.config
+            ns_config = Capistrano::NetStorage.config
+
+            run_locally_with_aws_env do
+              execute :aws, 's3', 'cp', '--no-progress', ns_config.local_archive_path, config.archive_url
+            end
+          end
+
+          def download
+            config = Capistrano::NetStorage::S3.config
+            ns_config = Capistrano::NetStorage.config
+
+            on release_roles(:all), in: :groups, limit: ns_config.max_parallels do
+              Retryable.retryable(tries: MAX_RETRY, sleep: 0.1) do
+                within releases_path do
+                  with(config.aws_environments) do
+                    sleep Random.rand(JITTER_DURATION_TO_DOWNLOAD)
+                    execute :aws, 's3', 'cp', '--no-progress', config.archive_url, ns_config.archive_path
+                  end
+                end
+              end
+            end
+          end
+
+          def cleanup
+            config = Capistrano::NetStorage::S3.config
+
+            files = run_locally_with_aws_env do
+              capture :aws, 's3', 'ls', config.archives_url
+            end.lines.sort.map { |line| line.chomp.split(' ').last }
+            releases = files - [KEEP_FILE]
+
+            if releases.count > config.s3_keep_releases
+              run_locally_with_aws_env do
+                info "Keeping #{config.s3_keep_releases} of #{releases.count} in #{config.archives_url}"
+                (releases - releases.last(config.s3_keep_releases)).each do |release|
+                  execute :aws, 's3', 'rm', config.archives_url + release
+                end
+              end
+            else
+              run_locally do
+                info "No old archives (keeping newest #{config.s3_keep_releases}) in #{config.archives_url}"
+              end
+            end
+          end
+
+          private
+
+          def run_locally_with_aws_env(&block)
+            config = Capistrano::NetStorage::S3.config
+
+            run_locally do
+              with(config.aws_environments) do
+                instance_eval(&block)
+              end
+            end
           end
         end
-      end
-    end
-  end
-
-  def cleanup
-    c         = config
-    list_args = %W(--bucket #{c.bucket} --output json)
-    if c.archives_directory
-      list_args += %W(--prefix #{c.archives_directory})
-    end
-    output = capture_aws_s3api('list-objects', list_args)
-    return if output.empty?
-
-    objects = JSON.parse(output)['Contents']
-    sorted  = objects.sort_by { |obj| Time.parse(obj['LastModified']) }
-    c.s3_keep_releases.times do
-      break if sorted.empty?
-      sorted.pop
-    end
-    sorted.each do |obj|
-      delete_args = %W(--bucket #{c.bucket} --key #{obj['Key']})
-      execute_aws_s3api('delete-object', *delete_args)
-    end
-  end
-
-  private
-
-  def execute_aws_s3(cmd, *args)
-    c = config
-    run_locally do
-      with(c.aws_environments) do
-        execute :aws, 's3', cmd, *args
-      end
-    end
-  end
-
-  def capture_aws_s3(cmd, *args)
-    c = config
-    run_locally do
-      with(c.aws_environments) do
-        capture :aws, 's3', cmd, *args
-      end
-    end
-  end
-
-  def execute_aws_s3api(cmd, *args)
-    c = config
-    run_locally do
-      with(c.aws_environments) do
-        execute :aws, 's3api', cmd, *args
-      end
-    end
-  end
-
-  def capture_aws_s3api(cmd, *args)
-    c = config
-    run_locally do
-      with(c.aws_environments) do
-        capture :aws, 's3api', cmd, *args
       end
     end
   end
