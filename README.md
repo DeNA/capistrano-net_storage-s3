@@ -4,7 +4,7 @@
 
 **Capistrano::NetStorage::S3** is a transport plugin of
 [Capistrano::NetStorage](https://github.com/DeNADev/capistrano-net_storage) to deploy application
-via [Amazon S3](https://aws.amazon.com/s3/).  
+via [Amazon S3](https://aws.amazon.com/s3/).
 And Capistrano::NetStorage is a plugin of [Capistrano](http://capistranorb.com/).
 
 ## Installation
