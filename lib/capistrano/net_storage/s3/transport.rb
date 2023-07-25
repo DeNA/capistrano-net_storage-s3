@@ -2,8 +2,7 @@ require 'forwardable'
 
 require 'capistrano/net_storage/transport/base'
 
-require 'capistrano/net_storage/s3/base'
-require 'capistrano/net_storage/s3/config'
+require 'capistrano/net_storage/s3'
 
 class Capistrano::NetStorage::S3::Transport < Capistrano::NetStorage::Transport::Base
   extend Forwardable
@@ -12,6 +11,6 @@ class Capistrano::NetStorage::S3::Transport < Capistrano::NetStorage::Transport:
   private
 
   def broker
-    Capistrano::NetStorage::S3.broker
+    @broker ||= Capistrano::NetStorage::S3.config.broker_class.new
   end
 end
