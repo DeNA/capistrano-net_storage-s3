@@ -61,22 +61,23 @@ module Capistrano
 
           def cleanup
             config = Capistrano::NetStorage::S3.config
+            ns_config = Capistrano::NetStorage.config
 
             files = run_locally_with_aws_env do
               capture :aws, 's3', 'ls', config.archives_url
             end.lines.sort.map { |line| line.chomp.split(' ').last }
             releases = files - [KEEP_FILE]
 
-            if releases.count > config.s3_keep_releases
+            if releases.count > ns_config.keep_remote_archives
               run_locally_with_aws_env do
-                info "Keeping #{config.s3_keep_releases} of #{releases.count} in #{config.archives_url}"
-                (releases - releases.last(config.s3_keep_releases)).each do |release|
+                info "Keeping #{ns_config.keep_remote_archives} of #{releases.count} in #{config.archives_url}"
+                (releases - releases.last(ns_config.keep_remote_archives)).each do |release|
                   execute :aws, 's3', 'rm', config.archives_url + release
                 end
               end
             else
               run_locally do
-                info "No old archives (keeping newest #{config.s3_keep_releases}) in #{config.archives_url}"
+                info "No old archives (keeping newest #{ns_config.keep_remote_archives}) in #{config.archives_url}"
               end
             end
           end

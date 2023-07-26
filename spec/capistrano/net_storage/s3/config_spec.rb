@@ -54,7 +54,6 @@ describe Capistrano::NetStorage::S3::Config do
       it 'yields default parameters' do
         expect(config.broker_class).to be Capistrano::NetStorage::S3::Broker::AwsCLI
         expect { config.bucket }.to raise_error(ArgumentError)
-        expect(config.s3_keep_releases).to eq 5
       end
 
       it 'yields AWS variable from ENV' do

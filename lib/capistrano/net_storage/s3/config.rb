@@ -39,10 +39,6 @@ class Capistrano::NetStorage::S3
       archives_url + "#{revision}.#{Capistrano::NetStorage.config.archive_file_extension}"
     end
 
-    def s3_keep_releases
-      fetch(:net_storage_s3_keep_releases, fetch(:keep_releases))
-    end
-
     private
 
     def archives_directory
