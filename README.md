@@ -81,10 +81,14 @@ Edit your `config/deploy.rb`:
 ```ruby
 set :net_storage_transport, Capistrano::NetStorage::S3::Transport
 set :net_storage_config_files, Pathname('path/to/config').glob('*.yml')
-set :net_storage_s3_bucket, 'example-bucket'
+
+# These settings upload archives to s3://bucket-for-deployment/api/#{sha1_hash}.tar.gz
+set :net_storage_s3_bucket, 'bucket-for-deployment'
+set :net_storage_s3_archives_directory 'api'
+
+set :net_storage_s3_aws_config_file, '~/.aws/config'
+# set :net_storage_s3_aws_profile, 'some-name' # If you are using multiple profiles
 ```
-
-
 
 ## License
 
