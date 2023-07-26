@@ -52,7 +52,6 @@ describe Capistrano::NetStorage::S3::Config do
       end
 
       it 'yields default parameters' do
-        expect(config.broker_class).to be Capistrano::NetStorage::S3::Broker::AwsCLI
         expect { config.bucket }.to raise_error(ArgumentError)
       end
 
@@ -99,7 +98,7 @@ describe Capistrano::NetStorage::S3::Config do
       it 'Customized parameters' do
         expect(config.bucket).to eq 'test-bucket'
         expect(config.archives_url.to_s).to eq 's3://test-bucket/archives/'
-        expect(config.archive_url.to_s).to eq "s3://test-bucket/archives/test-revision.#{ns_config.archive_suffix}"
+        expect(config.archive_url.to_s).to eq "s3://test-bucket/archives/test-revision.#{ns_config.archive_file_extension}"
       end
 
         # AWS config variables

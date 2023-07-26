@@ -1,18 +1,7 @@
 require 'uri'
 
-require 'capistrano/net_storage/s3/broker/aws_cli'
-
 class Capistrano::NetStorage::S3
   class Config
-    def broker_class
-      case fetch(:net_storage_s3_broker, :aws_cli)
-      when :aws_cli
-        Broker::AwsCLI
-      else
-        raise ArgumentError, "No broker defined! #{fetch(:net_storage_s3_broker)}"
-      end
-    end
-
     def aws_environments
       {
         aws_config_file: aws_config_file,
