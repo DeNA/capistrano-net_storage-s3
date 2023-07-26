@@ -1,5 +1,5 @@
 [![Gem Version](https://badge.fury.io/rb/capistrano-net_storage-s3.svg)](https://badge.fury.io/rb/capistrano-net_storage-s3)
-[![Build Status](https://travis-ci.org/DeNADev/capistrano-net_storage-s3.svg?branch=master)](https://travis-ci.org/DeNADev/capistrano-net_storage-s3)
+[![Test](https://github.com/DeNADev/capistrano-net_storage-s3/actions/workflows/test.yml/badge.svg)](https://github.com/DeNADev/capistrano-net_storage-s3/actions/workflows/test.yml?query=branch%3Amaster)
 # Capistrano::NetStorage::S3
 
 **Capistrano::NetStorage::S3** is a transport plugin of
