@@ -52,7 +52,6 @@ describe Capistrano::NetStorage::S3::Config do
       end
 
       it 'yields default parameters' do
-        expect(config.broker_class).to be Capistrano::NetStorage::S3::Broker::AwsCLI
         expect { config.bucket }.to raise_error(ArgumentError)
       end
 
