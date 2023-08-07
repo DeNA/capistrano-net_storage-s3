@@ -1,3 +1,14 @@
+## 1.0.0 (2023/08/07)
+
+Major Update by @aeroastro
+
+Improvement:
+
+* `--no-progress` option is passed to `aws cp` to keep console quiet (#7)
+* README.md has been changed not to `require 'capistrano-net_storage-s3` by bundler (#8)
+* Major improvement for `Capistrano::NetStorage` version 1.0.0 (#9, #10, #11)
+* GitHub Actions has been introduced (#12)
+
 ## 0.2.3 (2017/5/10)
 
 Enhancement:
